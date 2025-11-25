@@ -126,10 +126,10 @@ Giấy phép
 Dự án được phân phối dưới giấy phép MIT. Xem file LICENSE để biết thêm chi tiết.
 
 Liên hệ
-Tác giả: [Tên của bạn]
+Tác giả: Tàu Tàu
 
-Email: your.email@example.com
+Email: 
 
-Website: https://example.com
+Website: 
 
 README này sẽ được cập nhật khi dự án phát triển thêm các tính năng mới.
