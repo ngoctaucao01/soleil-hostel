@@ -18,36 +18,36 @@ class RoomsTableSeeder extends Seeder
                 'name' => 'Deluxe Single Room',
                 'description' => 'Comfortable single room with city view',
                 'price' => 100.00,
-                'capacity' => 1,
-                'amenities' => json_encode(['WiFi', 'TV', 'Air Conditioning', 'Mini Bar']),
+                'max_guests' => 1,
+                'status' => 'available'
             ],
             [
                 'name' => 'Deluxe Double Room',
                 'description' => 'Spacious double room with balcony',
                 'price' => 150.00,
-                'capacity' => 2,
-                'amenities' => json_encode(['WiFi', 'TV', 'Air Conditioning', 'Mini Bar', 'Balcony']),
+                'max_guests' => 2,
+                'status' => 'available'
             ],
             [
                 'name' => 'Family Suite',
                 'description' => 'Large suite perfect for families',
-                'price' => 250.00,
-                'capacity' => 4,
-                'amenities' => json_encode(['WiFi', 'TV', 'Air Conditioning', 'Mini Bar', 'Kitchen', 'Living Room']),
+                'price' => 200.00,
+                'max_guests' => 4,
+                'status' => 'available'
             ],
             [
                 'name' => 'Executive Suite',
                 'description' => 'Luxurious suite with separate living area',
                 'price' => 300.00,
-                'capacity' => 2,
-                'amenities' => json_encode(['WiFi', 'TV', 'Air Conditioning', 'Mini Bar', 'Living Room', 'Work Desk', 'Premium Toiletries']),
+                'max_guests' => 2,
+                'status' => 'available'
             ],
             [
                 'name' => 'Standard Twin Room',
                 'description' => 'Comfortable room with two single beds',
                 'price' => 120.00,
-                'capacity' => 2,
-                'amenities' => json_encode(['WiFi', 'TV', 'Air Conditioning']),
+                'max_guests' => 2,
+                'status' => 'available'
             ],
         ];
 

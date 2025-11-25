@@ -2,13 +2,17 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
+use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Traits\Purifiable;
 
 class Booking extends Model
 {
-    use HasFactory;
+    use HasFactory, Purifiable;
 
     protected $fillable = [
         'room_id',
@@ -16,13 +20,30 @@ class Booking extends Model
         'check_out',
         'guest_name',
         'guest_email',
-        'status'
+        'status',
+        'user_id',
     ];
 
     protected $casts = [
         'check_in' => 'date',
-        'check_out' => 'date'
+        'check_out' => 'date',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
+
+    /**
+     * Auto-purify these fields when saving
+     * Dùng HTML Purifier whitelist, chứ không phải regex blacklist
+     * (Regex XSS = 99% bypass. HTML Purifier = 0% bypass)
+     */
+    protected array $purifiable = ['guest_name'];
+
+    // ===== CONSTANTS =====
+    public const STATUS_PENDING = 'pending';
+    public const STATUS_CONFIRMED = 'confirmed';
+    public const STATUS_CANCELLED = 'cancelled';
+
+    public const ACTIVE_STATUSES = ['pending', 'confirmed'];
 
     /**
      * Get the room that owns the booking.
@@ -30,5 +51,119 @@ class Booking extends Model
     public function room(): BelongsTo
     {
         return $this->belongsTo(Room::class);
+    }
+
+    /**
+     * Get the user that made the booking.
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    // ===== SCOPES =====
+
+    /**
+     * Scope: Tìm các booking của phòng với ngày trùng lặp
+     * 
+     * Dùng half-open interval [check_in, check_out):
+     * - Cho phép book_old.check_out == book_new.check_in (checkout sáng, check-in trưa cùng ngày)
+     * 
+     * @param Builder $query
+     * @param int $roomId ID phòng
+     * @param Carbon|\DateTime $checkIn Ngày check-in mới
+     * @param Carbon|\DateTime $checkOut Ngày check-out mới
+     * @return Builder
+     */
+    public function scopeOverlappingBookings(
+        Builder $query,
+        int $roomId,
+        $checkIn,
+        $checkOut,
+        ?int $excludeBookingId = null
+    ): Builder {
+        // Đảm bảo các tham số là Carbon instance
+        $checkIn = $checkIn instanceof Carbon ? $checkIn : Carbon::parse($checkIn);
+        $checkOut = $checkOut instanceof Carbon ? $checkOut : Carbon::parse($checkOut);
+
+        // Logic overlap với half-open interval [a1, b1) và [a2, b2):
+        // Overlap xảy ra khi: a1 < b2 AND a2 < b1
+        // 
+        // Trong SQL: check_in < check_out_new AND check_out > check_in_new
+        return $query
+            ->where('room_id', $roomId)
+            ->whereIn('status', self::ACTIVE_STATUSES)
+            ->where('check_in', '<', $checkOut) // Ngày bắt đầu của booking hiện tại < ngày kết thúc mới
+            ->where('check_out', '>', $checkIn) // Ngày kết thúc của booking hiện tại > ngày bắt đầu mới
+            ->when($excludeBookingId, fn(Builder $q) => $q->where('id', '!=', $excludeBookingId));
+    }
+
+    /**
+     * Scope: Lọc booking active (chưa hủy)
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->whereIn('status', self::ACTIVE_STATUSES);
+    }
+
+    /**
+     * Scope: Lọc booking cancelled
+     */
+    public function scopeCancelled(Builder $query): Builder
+    {
+        return $query->where('status', self::STATUS_CANCELLED);
+    }
+
+    /**
+     * Scope: Lọc booking theo status
+     */
+    public function scopeByStatus(Builder $query, string $status): Builder
+    {
+        return $query->where('status', $status);
+    }
+
+    // ===== ACCESSORS / MUTATORS =====
+
+    /**
+     * Accessor: Kiểm tra booking đã qua (check_out đã là quá khứ)
+     */
+    public function isExpired(): bool
+    {
+        return $this->check_out->isPast();
+    }
+
+    /**
+     * Accessor: Kiểm tra booking đã started (check_in đã là quá khứ hoặc hôm nay)
+     */
+    public function isStarted(): bool
+    {
+        return $this->check_in->isPast() || $this->check_in->isToday();
+    }
+
+    /**
+     * Accessor: Số đêm đặt (duration in nights)
+     */
+    public function getNightsAttribute(): int
+    {
+        return $this->check_out->diffInDays($this->check_in);
+    }
+
+    /**
+     * Accessor: Kiểm tra ngày cho phép (check_out có bằng check_in không - không được)
+     */
+    public function isValidDateRange(): bool
+    {
+        return $this->check_in->lessThan($this->check_out);
+    }
+
+    /**
+     * Scope: Lấy lock FOR UPDATE trên các booking trùng
+     * 
+     * Dùng pessimistic locking để đảm bảo transaction safety
+     * DB sẽ lock các row matching query này, ngăn transaction khác sửa
+     */
+    public function scopeWithLock(Builder $query): Builder
+    {
+        return $query->lockForUpdate();
     }
 }

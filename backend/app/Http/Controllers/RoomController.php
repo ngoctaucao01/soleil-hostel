@@ -4,84 +4,93 @@ namespace App\Http\Controllers;
 
 use App\Models\Room;
 use Illuminate\Http\Request;
+use App\Http\Requests\RoomRequest;
 use Illuminate\Http\JsonResponse;
 
 class RoomController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    // List all rooms
     public function index(): JsonResponse
     {
+        $rooms = Room::all();
         return response()->json([
-            'data' => Room::select(['id', 'name', 'price', 'capacity'])->get()
+            'success' => true,
+            'message' => 'Room list fetched successfully',
+            'data' => $rooms
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    // Show a single room
+    public function show($id): JsonResponse
     {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request): JsonResponse
-    {
-        $validated = $request->validate([
-            'name' => 'required|string',
-            'description' => 'required|string',
-            'price' => 'required|numeric|min:0',
-            'capacity' => 'required|integer|min:1',
-            'amenities' => 'nullable|array'
+        $room = Room::find($id);
+        if (!$room) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Room not found',
+            ], 404);
+        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Room fetched successfully',
+            'data' => $room
         ]);
-
-        $room = Room::create($validated);
-        return response()->json($room, 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Room $room): JsonResponse
+    // Store a new room
+    public function store(RoomRequest $request): JsonResponse
     {
-        return response()->json($room);
+        // Use policy to check authorization
+        $this->authorize('create', Room::class);
+        
+        $room = Room::create($request->validated());
+        return response()->json([
+            'success' => true,
+            'message' => 'Room created successfully',
+            'data' => $room
+        ], 201);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Room $room)
+    // Update a room
+    public function update(RoomRequest $request, $id): JsonResponse
     {
-        //
-    }
+        $room = Room::find($id);
+        if (!$room) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Room not found',
+            ], 404);
+        }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Room $room): JsonResponse
-    {
-        $validated = $request->validate([
-            'name' => 'string',
-            'description' => 'string',
-            'price' => 'numeric|min:0',
-            'capacity' => 'integer|min:1',
-            'amenities' => 'nullable|array'
+        // Use policy to check authorization
+        $this->authorize('update', $room);
+        
+        $room->update($request->validated());
+        return response()->json([
+            'success' => true,
+            'message' => 'Room updated successfully',
+            'data' => $room
         ]);
-
-        $room->update($validated);
-        return response()->json($room);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Room $room): JsonResponse
+    // Delete a room
+    public function destroy($id): JsonResponse
     {
+        $room = Room::find($id);
+        if (!$room) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Room not found',
+            ], 404);
+        }
+
+        // Use policy to check authorization
+        $this->authorize('delete', $room);
+        
         $room->delete();
-        return response()->json(null, 204);
+        return response()->json([
+            'success' => true,
+            'message' => 'Room deleted successfully',
+        ]);
     }
 }

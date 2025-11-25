@@ -1,0 +1,15 @@
+{
+  "name": "soleil-hostel-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "concurrently \"cd backend && php artisan serve --host=127.0.0.1 --port=8000\" \"cd frontend && npm run dev -- --host\"",
+  "dev:docker": "docker compose up --build frontend",
+    "dev:backend": "cd backend && php artisan serve --host=127.0.0.1 --port=8000",
+    "dev:frontend": "cd frontend && npm run dev -- --host",
+    "start:docker": "docker compose up --build"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}

@@ -18,22 +18,22 @@ class RoomSeeder extends Seeder
                 'name' => 'Deluxe Room',
                 'description' => 'Spacious room with city view',
                 'price' => 150.00,
-                'capacity' => 2,
-                'amenities' => ['WiFi', 'TV', 'Mini Bar', 'Air Conditioning']
+                'max_guests' => 2,
+                'status' => 'available'
             ],
             [
                 'name' => 'Suite Room',
                 'description' => 'Luxury suite with separate living area',
                 'price' => 250.00,
-                'capacity' => 4,
-                'amenities' => ['WiFi', 'TV', 'Mini Bar', 'Air Conditioning', 'Jacuzzi', 'Living Room']
+                'max_guests' => 4,
+                'status' => 'available'
             ],
             [
                 'name' => 'Standard Room',
                 'description' => 'Comfortable room for single occupancy',
                 'price' => 100.00,
-                'capacity' => 1,
-                'amenities' => ['WiFi', 'TV', 'Air Conditioning']
+                'max_guests' => 1,
+                'status' => 'available'
             ]
         ];
 

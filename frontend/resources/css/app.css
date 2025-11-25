@@ -1,0 +1,3 @@
+/* Compatibility stylesheet for Laravel's @vite('resources/css/app.css') in dev mode */
+/* Use a relative import so Vite serves the expected path */
+@import url('../../src/index.css');
