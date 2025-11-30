@@ -6,6 +6,7 @@ interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
+
 /**
  * ProtectedRoute - Require httpOnly cookie token
  *

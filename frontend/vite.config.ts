@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import vitePluginCspNonce from './vite-plugin-csp-nonce'
+import path from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -8,6 +9,11 @@ export default defineConfig({
     react(),
     vitePluginCspNonce(),  // Inject CSP nonce vào HTML bundle
   ],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
   build: {
     // Output build into the Laravel public build directory so Laravel can serve the static assets
     outDir: 'dist',

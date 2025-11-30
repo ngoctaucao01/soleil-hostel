@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-  "dev": "vite --port 5173",
+    "dev": "vite --port 5173",
     "postdev": "node ./scripts/remove-hot.js",
     "dev:docker": "docker compose up --build frontend",
     "build": "tsc -b && vite build",
@@ -13,17 +13,20 @@
     "format": "prettier --write src/**/*.{ts,tsx}",
     "preview": "vite preview"
   },
-  
   "dependencies": {
     "axios": "^1.11.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "dom": "^0.0.3",
+    "react": "^19.2.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.9.6",
+    "route": "^0.2.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.22.0",
     "@types/node": "^22.15.3",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
+    "@types/react-router-dom": "^5.3.3",
     "@typescript-eslint/eslint-plugin": "^8.31.1",
     "@typescript-eslint/parser": "^8.31.1",
     "@vitejs/plugin-react": "^4.3.4",

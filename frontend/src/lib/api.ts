@@ -1,8 +1,8 @@
 /**
  * API Client with Automatic Token Refresh
- * 
+ *
  * Frontend (React) implementation cho token expiration + automatic refresh
- * 
+ *
  * Flow:
  * 1. Request goes out dengan token
  * 2. Server returns 401 (token expired/revoked)
@@ -10,18 +10,18 @@
  * 4. Auto call POST /api/auth/refresh (nếu refresh token available)
  * 5. Retry original request dengan new token
  * 6. Nếu refresh fail → redirect to login
- * 
+ *
  * Installation:
  * npm install axios
- * 
+ *
  * Usage:
  * import { apiClient } from '@/lib/api'
  * const data = await apiClient.get('/api/bookings')
- * 
+ *
  * Token Storage:
  * - sessionStorage.getItem('token') - Current access token
  * - localStorage.getItem('refreshToken') - Refresh token (persistent)
- * 
+ *
  * On Token Refresh:
  * - sessionStorage.setItem('token', newToken)
  * - localStorage.setItem('refreshToken', newRefreshToken) // if applicable
@@ -32,14 +32,14 @@ import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'ax
 
 /**
  * API Client Configuration
- * 
+ *
  * CORS Headers:
  * - Content-Type: application/json
  * - Accept: application/json
- * 
+ *
  * Authorization Header:
  * - Bearer <token> from sessionStorage
- * 
+ *
  * Timeout: 30 seconds
  */
 const apiClient: AxiosInstance = axios.create({
@@ -47,13 +47,13 @@ const apiClient: AxiosInstance = axios.create({
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
-    'Accept': 'application/json',
+    Accept: 'application/json',
   },
 })
 
 /**
  * Flag: Prevent infinite refresh loop
- * 
+ *
  * Nếu refresh endpoint fail → không retry vô tận
  * Set flag = true khi gọi refresh → skip interceptor response
  */
@@ -61,13 +61,13 @@ let isRefreshing = false
 
 /**
  * Queue: Hold failed requests đợi token refresh
- * 
+ *
  * Scenario:
  * - Request A → 401 (token expired) → queue
  * - Request B → 401 (token expired) → queue
  * - Refresh token → success
  * - Retry Request A + B với new token
- * 
+ *
  * Avoid: Gọi refresh nhiều lần trong lúc đợi
  */
 let failedQueue: {
@@ -77,11 +77,11 @@ let failedQueue: {
 
 /**
  * Process Queue: Retry tất cả failed requests
- * 
+ *
  * Called sau khi refresh token success
  */
 const processQueue = (error: AxiosError | null, token: string | null) => {
-  failedQueue.forEach((prom) => {
+  failedQueue.forEach(prom => {
     if (error) {
       prom.onFailure(error)
     } else if (token) {
@@ -94,10 +94,10 @@ const processQueue = (error: AxiosError | null, token: string | null) => {
 
 /**
  * Request Interceptor: Add Authorization header
- * 
+ *
  * Thêm token vào mỗi request:
  * Authorization: Bearer <token>
- * 
+ *
  * Token lấy từ sessionStorage (set khi login)
  */
 apiClient.interceptors.request.use(
@@ -110,23 +110,23 @@ apiClient.interceptors.request.use(
 
     return config
   },
-  (error) => Promise.reject(error)
+  error => Promise.reject(error)
 )
 
 /**
  * Response Interceptor: Handle 401 → Refresh Token → Retry
- * 
+ *
  * Error scenarios:
  * 1. 401 Token Expired → Call refresh → retry
  * 2. 401 Token Revoked → Redirect to login
  * 3. 401 Invalid Token → Redirect to login
  * 4. Other errors → Pass through
- * 
+ *
  * Success:
  * - 2xx → Return response
  */
 apiClient.interceptors.response.use(
-  (response) => response,
+  response => response,
 
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
@@ -147,14 +147,18 @@ apiClient.interceptors.response.use(
         return new Promise((onSuccess, onFailure) => {
           failedQueue.push({ onSuccess, onFailure })
         })
-          .then((token: string) => {
+          .then((token: unknown) => {
+            if (typeof token !== 'string') {
+              return Promise.reject(new Error('Token must be a string'))
+            }
+
             // Refresh success → retry original request
             if (originalRequest.headers) {
               originalRequest.headers.Authorization = `Bearer ${token}`
             }
             return apiClient(originalRequest)
           })
-          .catch((err) => {
+          .catch(err => {
             return Promise.reject(err)
           })
       }
@@ -213,7 +217,7 @@ apiClient.interceptors.response.use(
 
 /**
  * Handle Logout: Clear tokens + redirect to login
- * 
+ *
  * Called khi:
  * - Refresh token fail (401 on /api/auth/refresh)
  * - 403 Unauthorized
@@ -301,14 +305,14 @@ export const getCurrentUser = async () => {
 
 /**
  * Setup Token Expiration Timer
- * 
+ *
  * Display notification khi token sắp hết hạn (5 phút trước)
- * 
+ *
  * Usage:
  * setupTokenExpirationWarning()
  */
 export const setupTokenExpirationWarning = () => {
-  getCurrentUser().then((data) => {
+  getCurrentUser().then(data => {
     if (data?.token?.expires_in_seconds) {
       const expiringInMs = (data.token.expires_in_seconds - 300) * 1000 // 5 phút trước
 
