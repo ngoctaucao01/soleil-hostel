@@ -1,5 +1,5 @@
 Soleil Hostel - Dự án Quản lý Nhà nghỉ
-Soleil Hostel Logo <!-- Thêm đường dẫn logo nếu có -->
+Soleil Hostel 
 
 Giới thiệu
 Dự án Soleil Hostel là một hệ thống quản lý nhà nghỉ/hostel hiện đại với các tính năng quản lý phòng, đặt phòng, quản lý khách hàng và báo cáo thống kê.
