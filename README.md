@@ -71,7 +71,7 @@ Các bước cài đặt
 Clone dự án:
 
 bash
-git clone https://github.com/yourusername/soleil-hostel.git
+git clone https://github.com/taucao-ruby/soleil-hostel.git
 cd soleil-hostel
 Cài đặt dependencies:
 
@@ -128,7 +128,7 @@ Dự án được phân phối dưới giấy phép MIT. Xem file LICENSE để 
 Liên hệ
 Tác giả: Tàu Tàu
 
-Email: 
+Email: tau.cao21@student.passerellesnumeriques.org
 
 Website: 
 
