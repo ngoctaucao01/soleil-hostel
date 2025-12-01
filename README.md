@@ -128,7 +128,7 @@ Dự án được phân phối dưới giấy phép MIT. Xem file LICENSE để 
 Liên hệ
 Tác giả: Tàu Tàu
 
-Email: 
+Email: tau.cao21@student.passerellesnumeriques.org
 
 Website: 
 
