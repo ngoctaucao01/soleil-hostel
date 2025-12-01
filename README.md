@@ -71,7 +71,7 @@ Các bước cài đặt
 Clone dự án:
 
 bash
-git clone https://github.com/yourusername/soleil-hostel.git
+git clone https://github.com/taucao-ruby/soleil-hostel.git
 cd soleil-hostel
 Cài đặt dependencies:
 
