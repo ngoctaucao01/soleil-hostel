@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import React, { useState } from 'react'
+import { useAuth } from '../contexts/AuthContext'
 
 interface RegisterProps {
-  onSuccess?: () => void;
-  onSwitchToLogin?: () => void;
+  onSuccess?: () => void
+  onSwitchToLogin?: () => void
 }
 
 /**
@@ -15,60 +15,61 @@ interface RegisterProps {
  * - XSS cannot steal token
  */
 const Register: React.FC<RegisterProps> = ({ onSuccess, onSwitchToLogin }) => {
-  const { registerHttpOnly, loading: authLoading, error: authError, clearError } = useAuth();
+  const { registerHttpOnly, loading: authLoading, error: authError, clearError } = useAuth()
 
   const [form, setForm] = useState({
     name: '',
     email: '',
     password: '',
     password_confirmation: '',
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    if (error) setError(null);
-    if (authError) clearError();
-  };
+    setForm({ ...form, [e.target.name]: e.target.value })
+    if (error) setError(null)
+    if (authError) clearError()
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
+    e.preventDefault()
+    setError(null)
 
     // Validation
     if (form.password !== form.password_confirmation) {
-      setError('Passwords do not match');
-      return;
+      setError('Passwords do not match')
+      return
     }
 
     if (form.password.length < 8) {
-      setError('Password must be at least 8 characters');
-      return;
+      setError('Password must be at least 8 characters')
+      return
     }
 
-    setLoading(true);
+    setLoading(true)
 
     try {
-      await registerHttpOnly(form.name, form.email, form.password, form.password_confirmation);
+      await registerHttpOnly(form.name, form.email, form.password, form.password_confirmation)
 
       setForm({
         name: '',
         email: '',
         password: '',
         password_confirmation: '',
-      });
-      onSuccess?.();
-    } catch (err: any) {
-      const errorMsg = err?.response?.data?.message || err.message || 'Registration failed';
-      setError(errorMsg);
+      })
+      onSuccess?.()
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string }
+      const errorMsg = error?.response?.data?.message || error?.message || 'Registration failed'
+      setError(errorMsg)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
-  const isLoading = loading || authLoading;
-  const displayError = error || authError;
+  const isLoading = loading || authLoading
+  const displayError = error || authError
 
   return (
     <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-lg">
@@ -160,7 +161,7 @@ const Register: React.FC<RegisterProps> = ({ onSuccess, onSwitchToLogin }) => {
         </button>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Register;
+export default Register

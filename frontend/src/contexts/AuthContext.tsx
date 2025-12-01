@@ -1,31 +1,41 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import authService, { LoginPayload, RegisterPayload, HttpOnlyAuthResponse } from '../services/auth';
-import { clearCsrfToken } from '../utils/csrf';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import authService from '../services/auth'
+import { clearCsrfToken } from '../utils/csrf'
 
 export interface User {
-  id: number;
-  name: string;
-  email: string;
+  id: number
+  name: string
+  email: string
 }
 
 interface AuthContextType {
-  user: User | null;
-  isAuthenticated: boolean;
-  loading: boolean;
-  error: string | null;
-  loginHttpOnly: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
-  registerHttpOnly: (name: string, email: string, password: string, passwordConfirmation: string) => Promise<void>;
-  logoutHttpOnly: () => Promise<void>;
-  me: () => Promise<User | null>;
-  clearError: () => void;
+  user: User | null
+  isAuthenticated: boolean
+  loading: boolean
+  error: string | null
+  loginHttpOnly: (email: string, password: string, rememberMe?: boolean) => Promise<void>
+  registerHttpOnly: (
+    name: string,
+    email: string,
+    password: string,
+    passwordConfirmation: string
+  ) => Promise<void>
+  logoutHttpOnly: () => Promise<void>
+  me: () => Promise<User | null>
+  clearError: () => void
 
   // Legacy methods (deprecated - kept for backward compatibility)
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string, passwordConfirmation: string) => Promise<void>;
-  logout: () => Promise<void>;
+  login: (email: string, password: string) => Promise<void>
+  register: (
+    name: string,
+    email: string,
+    password: string,
+    passwordConfirmation: string
+  ) => Promise<void>
+  logout: () => Promise<void>
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 /**
  * AuthProvider - Manages authentication state with httpOnly cookies
@@ -38,13 +48,13 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
  * - Logout clears both token + sessionStorage
  */
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const clearError = useCallback(() => {
-    setError(null);
-  }, []);
+    setError(null)
+  }, [])
 
   // Validate token on mount by calling /me endpoint
   useEffect(() => {
@@ -53,20 +63,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // ========== VALIDATE TOKEN FROM COOKIE ==========
         // Browser sends httpOnly cookie automatically
         // Returns 401 if token expired/revoked
-        const meResponse = await authService.getMeHttpOnly();
-        setUser(meResponse.user);
-        setError(null);
-      } catch (err: any) {
+        const meResponse = await authService.getMeHttpOnly()
+        setUser(meResponse.user)
+        setError(null)
+      } catch (err: unknown) {
         // No valid token, user not authenticated
-        setUser(null);
-        console.warn('Token validation failed:', err?.response?.status);
+        setUser(null)
+        const error = err as { response?: { status?: number } }
+        console.warn('Token validation failed:', error?.response?.status)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
+    }
 
-    validateToken();
-  }, []);
+    validateToken()
+  }, [])
 
   /**
    * LOGIN with httpOnly Cookie
@@ -78,40 +89,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    * 4. Save CSRF token to sessionStorage for X-XSRF-TOKEN header
    * 5. Axios interceptor handles automatic refresh on 401
    */
-  const loginHttpOnly = useCallback(async (email: string, password: string, rememberMe: boolean = false) => {
-    setLoading(true);
-    setError(null);
+  const loginHttpOnly = useCallback(
+    async (email: string, password: string, rememberMe: boolean = false) => {
+      setLoading(true)
+      setError(null)
 
-    try {
-      const response = await authService.loginHttpOnly({
-        email,
-        password,
-        remember_me: rememberMe,
-      });
+      try {
+        const response = await authService.loginHttpOnly({
+          email,
+          password,
+          remember_me: rememberMe,
+        })
 
-      // ========== Save User ==========
-      setUser(response.user);
-      setError(null);
+        // ========== Save User ==========
+        setUser(response.user)
+        setError(null)
 
-      // ========== Token already in httpOnly cookie ==========
-      // Browser automatically includes in all requests
-      // JavaScript CANNOT access it (that's the point!)
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Login failed';
-      setError(errorMessage);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+        // ========== Token already in httpOnly cookie ==========
+        // Browser automatically includes in all requests
+        // JavaScript CANNOT access it (that's the point!)
+      } catch (err: unknown) {
+        const error = err as { response?: { data?: { message?: string } } }
+        const errorMessage = error?.response?.data?.message || 'Login failed'
+        setError(errorMessage)
+        throw err
+      } finally {
+        setLoading(false)
+      }
+    },
+    []
+  )
 
   /**
    * REGISTER with httpOnly Cookie
    */
   const registerHttpOnly = useCallback(
     async (name: string, email: string, password: string, passwordConfirmation: string) => {
-      setLoading(true);
-      setError(null);
+      setLoading(true)
+      setError(null)
 
       try {
         const response = await authService.registerHttpOnly({
@@ -119,20 +134,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email,
           password,
           password_confirmation: passwordConfirmation,
-        });
+        })
 
-        setUser(response.user);
-        setError(null);
-      } catch (err: any) {
-        const errorMessage = err.response?.data?.message || 'Registration failed';
-        setError(errorMessage);
-        throw err;
+        setUser(response.user)
+        setError(null)
+      } catch (err: unknown) {
+        const error = err as { response?: { data?: { message?: string } } }
+        const errorMessage = error?.response?.data?.message || 'Registration failed'
+        setError(errorMessage)
+        throw err
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
     },
     []
-  );
+  )
 
   /**
    * LOGOUT with httpOnly Cookie
@@ -145,25 +161,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    * 5. Frontend clears user state
    */
   const logoutHttpOnly = useCallback(async () => {
-    setLoading(true);
+    setLoading(true)
 
     try {
       // Backend revokes token + clears cookie
-      await authService.logoutHttpOnly();
+      await authService.logoutHttpOnly()
 
       // Frontend cleanup
-      setUser(null);
-      clearCsrfToken();
-      setError(null);
+      setUser(null)
+      clearCsrfToken()
+      setError(null)
     } catch (err) {
-      console.error('Logout error:', err);
+      console.error('Logout error:', err)
       // Even if API call fails, clear local state
-      setUser(null);
-      clearCsrfToken();
+      setUser(null)
+      clearCsrfToken()
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, []);
+  }, [])
 
   /**
    * ME - Get current user from token
@@ -175,14 +191,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    */
   const me = useCallback(async (): Promise<User | null> => {
     try {
-      const meResponse = await authService.getMeHttpOnly();
-      setUser(meResponse.user);
-      return meResponse.user;
+      const meResponse = await authService.getMeHttpOnly()
+      setUser(meResponse.user)
+      return meResponse.user
     } catch (err) {
-      setUser(null);
-      throw err;
+      setUser(null)
+      throw err
     }
-  }, []);
+  }, [])
 
   /**
    * ========== LEGACY METHODS (Deprecated) ==========
@@ -190,26 +206,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    */
 
   const login = useCallback(async (email: string, password: string) => {
-    setLoading(true);
-    setError(null);
+    setLoading(true)
+    setError(null)
 
     try {
-      const response = await authService.login({ email, password });
-      setUser(response.data.user);
-      setError(null);
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Login failed';
-      setError(errorMessage);
-      throw err;
+      const response = await authService.login({ email, password })
+      setUser(response.data.user)
+      setError(null)
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } }
+      const errorMessage = error?.response?.data?.message || 'Login failed'
+      setError(errorMessage)
+      throw err
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, []);
+  }, [])
 
   const register = useCallback(
     async (name: string, email: string, password: string, passwordConfirmation: string) => {
-      setLoading(true);
-      setError(null);
+      setLoading(true)
+      setError(null)
 
       try {
         const response = await authService.register({
@@ -217,35 +234,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email,
           password,
           password_confirmation: passwordConfirmation,
-        });
+        })
 
-        setUser(response.data.user);
-        setError(null);
-      } catch (err: any) {
-        const errorMessage = err.response?.data?.message || 'Registration failed';
-        setError(errorMessage);
-        throw err;
+        setUser(response.data.user)
+        setError(null)
+      } catch (err: unknown) {
+        const error = err as { response?: { data?: { message?: string } } }
+        const errorMessage = error?.response?.data?.message || 'Registration failed'
+        setError(errorMessage)
+        throw err
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
     },
     []
-  );
+  )
 
   const logout = useCallback(async () => {
-    setLoading(true);
+    setLoading(true)
 
     try {
-      await authService.logout();
-      setUser(null);
-      setError(null);
+      await authService.logout()
+      setUser(null)
+      setError(null)
     } catch (err) {
-      console.error('Logout error:', err);
-      setUser(null);
+      console.error('Logout error:', err)
+      setUser(null)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, []);
+  }, [])
 
   return (
     <AuthContext.Provider
@@ -267,13 +285,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     >
       {children}
     </AuthContext.Provider>
-  );
-};
+  )
+}
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
+  const context = useContext(AuthContext)
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth must be used within an AuthProvider')
   }
-  return context;
-};
+  return context
+}

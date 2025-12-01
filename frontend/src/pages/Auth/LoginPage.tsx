@@ -1,22 +1,22 @@
 /**
  * Login Component - React example with token expiration
- * 
+ *
  * Features:
  * - Login form (email + password)
  * - Remember me checkbox (long-lived token)
  * - Device name auto-detect
  * - Token storage (sessionStorage + localStorage)
  * - Error handling
- * 
+ *
  * Token Management:
  * - sessionStorage: Current session token (cleared on browser close)
  * - localStorage: Remember token (persistent, survive browser restart)
- * 
+ *
  * On Success:
  * - Store token
  * - Store user info
  * - Redirect to dashboard
- * 
+ *
  * On 401:
  * - Axios interceptor auto-refresh
  * - Retry login
@@ -53,8 +53,9 @@ export const LoginPage: React.FC = () => {
       } else {
         setError('Email hoặc mật khẩu không đúng.')
       }
-    } catch (err: any) {
-      setError(err.message || 'Lỗi đăng nhập. Vui lòng thử lại.')
+    } catch (err: unknown) {
+      const error = err as { message?: string }
+      setError(error?.message || 'Lỗi đăng nhập. Vui lòng thử lại.')
     } finally {
       setLoading(false)
     }
@@ -75,7 +76,7 @@ export const LoginPage: React.FC = () => {
               id="email"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={e => setEmail(e.target.value)}
               required
               disabled={loading}
               className="form-control"
@@ -90,7 +91,7 @@ export const LoginPage: React.FC = () => {
               id="password"
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={e => setPassword(e.target.value)}
               required
               disabled={loading}
               className="form-control"
@@ -104,7 +105,7 @@ export const LoginPage: React.FC = () => {
               id="rememberMe"
               type="checkbox"
               checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
+              onChange={e => setRememberMe(e.target.checked)}
               disabled={loading}
               className="form-check-input"
             />
@@ -129,11 +130,7 @@ export const LoginPage: React.FC = () => {
           </div>
 
           {/* Submit */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn btn-primary btn-block"
-          >
+          <button type="submit" disabled={loading} className="btn btn-primary btn-block">
             {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
           </button>
         </form>

@@ -175,7 +175,7 @@ apiClient.interceptors.response.use(
           type: string
         }>('/api/auth/refresh')
 
-        const { token, expires_in_seconds } = response.data
+        const { token } = response.data
 
         // ========== Store New Token ==========
         sessionStorage.setItem('token', token)
@@ -245,14 +245,14 @@ export const login = async (email: string, password: string, rememberMe: boolean
       expires_at: string
       expires_in_seconds: number
       type: string
-      user: any
+      user: Record<string, unknown>
     }>('/api/auth/login', {
       email,
       password,
       remember_me: rememberMe,
     })
 
-    const { token, expires_in_seconds, user } = response.data
+    const { token, user } = response.data
 
     // Store token
     sessionStorage.setItem('token', token)
@@ -298,7 +298,7 @@ export const getCurrentUser = async () => {
   try {
     const response = await apiClient.get('/api/auth/me')
     return response.data
-  } catch (error) {
+  } catch {
     return null
   }
 }

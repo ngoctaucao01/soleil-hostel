@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import React, { useState } from 'react'
+import { useAuth } from '../contexts/AuthContext'
 
 interface LoginProps {
-  onSuccess?: () => void;
-  onSwitchToRegister?: () => void;
+  onSuccess?: () => void
+  onSwitchToRegister?: () => void
 }
 
 /**
@@ -19,50 +19,51 @@ interface LoginProps {
  * 7. XSS cannot steal token (it's in httpOnly cookie)
  */
 const Login: React.FC<LoginProps> = ({ onSuccess, onSwitchToRegister }) => {
-  const { loginHttpOnly, loading: authLoading, error: authError, clearError } = useAuth();
+  const { loginHttpOnly, loading: authLoading, error: authError, clearError } = useAuth()
 
-  const [form, setForm] = useState({ email: '', password: '', rememberMe: false });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [form, setForm] = useState({ email: '', password: '', rememberMe: false })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, type, checked, value } = e.target;
+    const { name, type, checked, value } = e.target
 
     setForm({
       ...form,
       [name]: type === 'checkbox' ? checked : value,
-    });
+    })
 
-    if (error) setError(null);
-    if (authError) clearError();
-  };
+    if (error) setError(null)
+    if (authError) clearError()
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setLoading(true);
+    e.preventDefault()
+    setError(null)
+    setLoading(true)
 
     try {
       // ========== LOGIN WITH httpOnly COOKIE ==========
-      await loginHttpOnly(form.email, form.password, form.rememberMe);
+      await loginHttpOnly(form.email, form.password, form.rememberMe)
 
       // ✅ Token stored in httpOnly cookie (browser managed)
       // ✅ CSRF token saved to sessionStorage
       // ✅ Axios interceptor will auto-add X-XSRF-TOKEN header
       // ✅ XSS cannot access token
 
-      setForm({ email: '', password: '', rememberMe: false });
-      onSuccess?.();
-    } catch (err: any) {
-      const errorMsg = err?.response?.data?.message || err.message || 'Login failed';
-      setError(errorMsg);
+      setForm({ email: '', password: '', rememberMe: false })
+      onSuccess?.()
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string }
+      const errorMsg = error?.response?.data?.message || error?.message || 'Login failed'
+      setError(errorMsg)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
-  const isLoading = loading || authLoading;
-  const displayError = error || authError;
+  const isLoading = loading || authLoading
+  const displayError = error || authError
 
   return (
     <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-lg">
@@ -139,7 +140,7 @@ const Login: React.FC<LoginProps> = ({ onSuccess, onSwitchToRegister }) => {
         </button>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Login;
+export default Login
