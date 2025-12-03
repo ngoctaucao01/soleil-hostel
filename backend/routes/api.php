@@ -8,7 +8,7 @@ use App\Http\Controllers\Auth\HttpOnlyTokenController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ContactController;
-use App\Http\Controllers\Security\CspViolationReportController;
+use App\Http\Controllers\HealthCheckController;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,6 +22,10 @@ use App\Http\Controllers\Security\CspViolationReportController;
 */
 
 // ========== PUBLIC ROUTES (No authentication) ==========
+
+// ========== HEALTH CHECK ==========
+Route::get('/health', [HealthCheckController::class, 'check']);
+Route::get('/health/detailed', [HealthCheckController::class, 'detailed']);
 
 // Health check
 Route::get('ping', function() {

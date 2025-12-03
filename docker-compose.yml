@@ -13,6 +13,33 @@ services:
     volumes:
       - dbdata:/var/lib/mysql
 
+  # ========== REDIS SERVICE (NEW) ==========
+  # Cache + Session + Rate Limiting + Queue
+  # Production: 2GB memory, AOF+RDB persistence
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - redisdata:/data
+    command: redis-server /usr/local/etc/redis/redis.conf
+    environment:
+      REDIS_REPL_DISKLESS_SYNC: "yes"
+      REDIS_MAX_CLIENTS: 50000
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - default
+
   backend:
     build:
       context: ./backend
@@ -24,6 +51,7 @@ services:
       - "8000:8000"
     depends_on:
       - db
+      - redis
     environment:
       APP_ENV: ${APP_ENV:-local}
       APP_DEBUG: ${APP_DEBUG:-false}
@@ -33,6 +61,12 @@ services:
       DB_DATABASE: ${DB_DATABASE:-homestay}
       DB_USERNAME: ${DB_USERNAME:-root}
       DB_PASSWORD: ${DB_PASSWORD:-root}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_CLIENT: phpredis
+      CACHE_DRIVER: redis
+      SESSION_DRIVER: redis
+      QUEUE_CONNECTION: redis
       SANCTUM_STATEFUL_DOMAINS: ${SANCTUM_STATEFUL_DOMAINS:-localhost:5173,127.0.0.1:5173}
       SESSION_DOMAIN: ${SESSION_DOMAIN:-localhost}
     command: bash -lc "composer install || true; php artisan key:generate || true; php artisan migrate --force || true; php artisan serve --host=0.0.0.0 --port=8000"
@@ -52,4 +86,6 @@ services:
 
 volumes:
   dbdata:
+    driver: local
+  redisdata:
     driver: local

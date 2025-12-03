@@ -32,6 +32,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Load RateLimiterServiceProvider early
+        $this->app->register(RateLimiterServiceProvider::class);
+
         // Register custom PersonalAccessToken model for Sanctum
         // CRITICAL: This ensures our expiration logic is used
         Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
