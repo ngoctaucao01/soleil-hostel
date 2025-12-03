@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+<psalm
+    errorLevel="1"
+    resolveFromConfigFile="true"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="https://getpsalm.org/schema/psalm"
+    xsi:schemaLocation="https://getpsalm.org/schema/psalm vendor/vimeo/psalm/config.xsd"
+>
+    <projectFiles>
+        <directory name="app" />
+        <directory name="bootstrap" />
+        <directory name="config" />
+        <directory name="routes" />
+        <ignoreFiles>
+            <directory name="vendor" />
+            <directory name="tests" />
+        </ignoreFiles>
+    </projectFiles>
+
+    <!-- ========== STRICT MODE: Level 1 (Maximum strictness) ========== -->
+    <issueHandlers>
+        <!-- Strict type checking -->
+        <UndefinedClass>
+            <errorLevel type="suppress">
+                <directory name="config" />
+                <directory name="bootstrap" />
+            </errorLevel>
+        </UndefinedClass>
+
+        <!-- Laravel-specific exceptions -->
+        <InvalidStringClass>
+            <errorLevel type="suppress">
+                <directory name="config" />
+                <directory name="routes" />
+            </errorLevel>
+        </InvalidStringClass>
+
+        <!-- Undefined methods on facades -->
+        <UndefinedMethod>
+            <errorLevel type="suppress">
+                <directory name="config" />
+            </errorLevel>
+        </UndefinedMethod>
+
+        <!-- Report unused code -->
+        <UnusedVariable errorLevel="warn" />
+        <UnusedMethod errorLevel="warn" />
+        <UnusedClass errorLevel="warn" />
+        <UnusedParam errorLevel="warn" />
+
+        <!-- Catch null types early -->
+        <NullableReturnStatement errorLevel="error" />
+        <InvalidReturnType errorLevel="error" />
+        <InvalidReturnStatement errorLevel="error" />
+        <MoreSpecificReturnType errorLevel="error" />
+        <LessSpecificReturnStatement errorLevel="error" />
+
+        <!-- Type coercion -->
+        <InvalidScalarArgument errorLevel="error" />
+        <InvalidArgument errorLevel="error" />
+        <TypeCoercion errorLevel="error" />
+
+        <!-- Deprecated code -->
+        <DeprecatedMethod errorLevel="info" />
+        <DeprecatedClass errorLevel="info" />
+        <DeprecatedProperty errorLevel="info" />
+        <DeprecatedFunction errorLevel="info" />
+
+        <!-- Internal properties -->
+        <InternalClass errorLevel="warn" />
+        <InternalMethod errorLevel="warn" />
+        <InternalProperty errorLevel="warn" />
+    </issueHandlers>
+
+    <!-- ========== PLUGINS ========== -->
+    <plugins>
+        <pluginClass class="Psalm\LaravelPlugin\Plugin" />
+    </plugins>
+
+    <!-- ========== TYPE MAPPING ========== -->
+    <globals>
+        <var name="config" type="array&lt;string, mixed&gt;" />
+        <var name="env" type="string" />
+    </globals>
+</psalm>
