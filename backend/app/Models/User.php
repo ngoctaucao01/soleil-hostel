@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -90,5 +91,24 @@ class User extends Authenticatable
     public function bookings(): HasMany
     {
         return $this->hasMany(Booking::class);
+    }
+
+    // ===== SCOPES =====
+
+    /**
+     * Scope: Select only commonly needed columns
+     * 
+     * Usage: User::selectColumns()->get()
+     */
+    public function scopeSelectColumns(Builder $query): Builder
+    {
+        return $query->select([
+            'users.id',
+            'users.name',
+            'users.email',
+            'users.role',
+            'users.created_at',
+            'users.updated_at',
+        ]);
     }
 }

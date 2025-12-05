@@ -64,6 +64,43 @@ class Booking extends Model
     // ===== SCOPES =====
 
     /**
+     * Scope: Load common relationships with column selection to prevent N+1
+     * 
+     * This is the PRIMARY scope to use in controllers. Loads room + user with only needed columns.
+     * 
+     * Usage: Booking::withCommonRelations()->get()
+     */
+    public function scopeWithCommonRelations(Builder $query): Builder
+    {
+        return $query
+            ->with([
+                'room' => fn($q) => $q->selectColumns(),
+                'user' => fn($q) => $q->selectColumns(),
+            ]);
+    }
+
+    /**
+     * Scope: Select only commonly needed columns to reduce memory + bandwidth
+     * 
+     * Usage: Booking::selectColumns()->get()
+     */
+    public function scopeSelectColumns(Builder $query): Builder
+    {
+        return $query->select([
+            'bookings.id',
+            'bookings.room_id',
+            'bookings.user_id',
+            'bookings.check_in',
+            'bookings.check_out',
+            'bookings.guest_name',
+            'bookings.guest_email',
+            'bookings.status',
+            'bookings.created_at',
+            'bookings.updated_at',
+        ]);
+    }
+
+    /**
      * Scope: Tìm các booking của phòng với ngày trùng lặp
      * 
      * Dùng half-open interval [check_in, check_out):

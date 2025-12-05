@@ -5,8 +5,14 @@ namespace App\Providers;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
+use Illuminate\Database\Events\QueryExecuted;
 use App\Events\BookingCreated;
+use App\Events\BookingUpdated;
+use App\Events\BookingDeleted;
 use App\Listeners\InvalidateRoomAvailabilityCache;
+use App\Listeners\InvalidateCacheOnBookingUpdated;
+use App\Listeners\InvalidateCacheOnBookingDeleted;
+use App\Listeners\QueryDebuggerListener;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -20,9 +26,22 @@ class EventServiceProvider extends ServiceProvider
             SendEmailVerificationNotification::class,
         ],
 
+        // ========== QUERY DEBUGGING ==========
+        QueryExecuted::class => [
+            QueryDebuggerListener::class,  // ← Track N+1 queries
+        ],
+
         // ========== BOOKING EVENTS ==========
         BookingCreated::class => [
             InvalidateRoomAvailabilityCache::class,  // ← Auto-invalidate cache
+        ],
+
+        BookingUpdated::class => [
+            InvalidateCacheOnBookingUpdated::class,  // ← Auto-invalidate cache on update
+        ],
+
+        BookingDeleted::class => [
+            InvalidateCacheOnBookingDeleted::class,  // ← Auto-invalidate cache on delete
         ],
     ];
 

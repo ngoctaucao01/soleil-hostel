@@ -3,7 +3,7 @@
 namespace App\Listeners;
 
 use App\Events\BookingCreated;
-use App\Services\Cache\RoomAvailabilityCache;
+use App\Services\RoomAvailabilityService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 
@@ -24,7 +24,7 @@ class InvalidateRoomAvailabilityCache implements ShouldQueue
     /**
      * Constructor
      */
-    public function __construct(private RoomAvailabilityCache $cache)
+    public function __construct(private RoomAvailabilityService $availabilityService)
     {
         //
     }
@@ -40,7 +40,7 @@ class InvalidateRoomAvailabilityCache implements ShouldQueue
         $roomId = $event->booking->room_id;
 
         // Invalidate cache for this specific room
-        $this->cache->invalidateRoomAvailability($roomId);
+        $this->availabilityService->invalidateRoomCache($roomId);
 
         \Log::info("Cache invalidated for room {$roomId} after booking created");
     }

@@ -6,6 +6,9 @@ use App\Models\Booking;
 use App\Models\Room;
 use App\Http\Requests\StoreBookingRequest;
 use App\Http\Requests\UpdateBookingRequest;
+use App\Http\Resources\BookingResource;
+use App\Events\BookingUpdated;
+use App\Events\BookingDeleted;
 use App\Services\CreateBookingService;
 use Illuminate\Http\JsonResponse;
 use RuntimeException;
@@ -21,13 +24,14 @@ class BookingController extends Controller
      */
     public function index(): JsonResponse
     {
-        $bookings = Booking::with('room')
+        $bookings = Booking::withCommonRelations()
             ->where('user_id', auth()->id())
+            ->orderBy('created_at', 'desc')
             ->get();
         
         return response()->json([
             'success' => true,
-            'data' => $bookings
+            'data' => BookingResource::collection($bookings)
         ]);
     }
 
@@ -61,7 +65,7 @@ class BookingController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Booking created successfully',
-                'data' => $booking->load('room'),
+                'data' => new BookingResource($booking->load('room')),
             ], 201);
         } catch (RuntimeException $e) {
             // Xử lý lỗi từ service (phòng đặt, không tồn tại, v.v.)
@@ -111,6 +115,9 @@ class BookingController extends Controller
         $validated = $request->validated();
 
         try {
+            // Store original booking for event
+            $originalBooking = $booking->replicate();
+
             // Gọi service update
             $booking = $this->bookingService->update(
                 booking: $booking,
@@ -119,10 +126,13 @@ class BookingController extends Controller
                 additionalData: []
             );
 
+            // Dispatch event for cache invalidation
+            BookingUpdated::dispatch($booking, $originalBooking);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Booking updated successfully',
-                'data' => $booking->load('room'),
+                'data' => new BookingResource($booking->load('room')),
             ]);
         } catch (RuntimeException $e) {
             return response()->json([
@@ -150,7 +160,13 @@ class BookingController extends Controller
         // Kiểm tra authorization
         $this->authorize('delete', $booking);
 
+        // Store booking data for event before deleting
+        $deletedBooking = $booking->replicate();
+
         $booking->delete();
+
+        // Dispatch event for cache invalidation
+        BookingDeleted::dispatch($deletedBooking);
 
         return response()->json([
             'success' => true,
