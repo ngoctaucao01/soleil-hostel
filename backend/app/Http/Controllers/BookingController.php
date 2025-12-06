@@ -10,13 +10,17 @@ use App\Http\Resources\BookingResource;
 use App\Events\BookingUpdated;
 use App\Events\BookingDeleted;
 use App\Services\CreateBookingService;
+use App\Services\BookingService;
+use App\Services\RoomService;
 use Illuminate\Http\JsonResponse;
 use RuntimeException;
 
 class BookingController extends Controller
 {
     public function __construct(
-        private CreateBookingService $bookingService
+        private CreateBookingService $createBookingService,
+        private BookingService $bookingService,
+        private RoomService $roomService
     ) {}
 
     /**
@@ -24,10 +28,7 @@ class BookingController extends Controller
      */
     public function index(): JsonResponse
     {
-        $bookings = Booking::withCommonRelations()
-            ->where('user_id', auth()->id())
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $bookings = $this->bookingService->getUserBookings(auth()->id());
         
         return response()->json([
             'success' => true,
@@ -52,7 +53,7 @@ class BookingController extends Controller
 
         try {
             // Gọi service để tạo booking (có pessimistic locking)
-            $booking = $this->bookingService->create(
+            $booking = $this->createBookingService->create(
                 roomId: $validated['room_id'],
                 checkIn: $validated['check_in'],
                 checkOut: $validated['check_out'],
@@ -61,6 +62,9 @@ class BookingController extends Controller
                 userId: auth()->id(),
                 additionalData: []
             );
+
+            // Dispatch event for cache invalidation
+            event(new \App\Events\BookingCreated($booking));
 
             return response()->json([
                 'success' => true,
@@ -77,7 +81,8 @@ class BookingController extends Controller
             // Log error nếu cần
             \Log::error('Booking creation failed: ' . $e->getMessage(), [
                 'user_id' => auth()->id(),
-                'room_id' => $validated['room_id'] ?? null,
+                'room_id' 
+                => $validated['room_id'] ?? null,
                 'exception' => class_basename($e),
             ]);
 
@@ -96,9 +101,11 @@ class BookingController extends Controller
         // Kiểm tra authorization dùng policy
         $this->authorize('view', $booking);
 
+        $cachedBooking = $this->bookingService->getBookingById($booking->id);
+
         return response()->json([
             'success' => true,
-            'data' => $booking->load('room')
+            'data' => new BookingResource($cachedBooking)
         ]);
     }
 
@@ -119,7 +126,7 @@ class BookingController extends Controller
             $originalBooking = $booking->replicate();
 
             // Gọi service update
-            $booking = $this->bookingService->update(
+            $booking = $this->createBookingService->update(
                 booking: $booking,
                 checkIn: $validated['check_in'],
                 checkOut: $validated['check_out'],
@@ -127,7 +134,7 @@ class BookingController extends Controller
             );
 
             // Dispatch event for cache invalidation
-            BookingUpdated::dispatch($booking, $originalBooking);
+            event(new BookingUpdated($booking, $originalBooking));
 
             return response()->json([
                 'success' => true,
@@ -166,7 +173,7 @@ class BookingController extends Controller
         $booking->delete();
 
         // Dispatch event for cache invalidation
-        BookingDeleted::dispatch($deletedBooking);
+        event(new BookingDeleted($deletedBooking));
 
         return response()->json([
             'success' => true,

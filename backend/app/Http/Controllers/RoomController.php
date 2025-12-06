@@ -6,19 +6,19 @@ use App\Models\Room;
 use Illuminate\Http\Request;
 use App\Http\Requests\RoomRequest;
 use App\Http\Resources\RoomResource;
-use App\Services\RoomAvailabilityService;
+use App\Services\RoomService;
 use Illuminate\Http\JsonResponse;
 
 class RoomController extends Controller
 {
     public function __construct(
-        private RoomAvailabilityService $availabilityService
+        private RoomService $roomService
     ) {}
 
     // List all rooms
     public function index(): JsonResponse
     {
-        $rooms = $this->availabilityService->getAllRoomsWithAvailability();
+        $rooms = $this->roomService->getAllRoomsWithAvailability();
         
         return response()->json([
             'success' => true,
@@ -30,7 +30,7 @@ class RoomController extends Controller
     // Show a single room
     public function show($id): JsonResponse
     {
-        $room = $this->availabilityService->getRoomAvailability($id);
+        $room = $this->roomService->getRoomById($id);
         
         if (!$room) {
             return response()->json([

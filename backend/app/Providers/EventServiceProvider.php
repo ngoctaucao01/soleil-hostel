@@ -9,9 +9,7 @@ use Illuminate\Database\Events\QueryExecuted;
 use App\Events\BookingCreated;
 use App\Events\BookingUpdated;
 use App\Events\BookingDeleted;
-use App\Listeners\InvalidateRoomAvailabilityCache;
-use App\Listeners\InvalidateCacheOnBookingUpdated;
-use App\Listeners\InvalidateCacheOnBookingDeleted;
+use App\Listeners\InvalidateCacheOnBookingChange;
 use App\Listeners\QueryDebuggerListener;
 
 class EventServiceProvider extends ServiceProvider
@@ -31,17 +29,17 @@ class EventServiceProvider extends ServiceProvider
             QueryDebuggerListener::class,  // ← Track N+1 queries
         ],
 
-        // ========== BOOKING EVENTS ==========
+        // ========== BOOKING EVENTS + CACHE INVALIDATION ==========
         BookingCreated::class => [
-            InvalidateRoomAvailabilityCache::class,  // ← Auto-invalidate cache
+            InvalidateCacheOnBookingChange::class,
         ],
 
         BookingUpdated::class => [
-            InvalidateCacheOnBookingUpdated::class,  // ← Auto-invalidate cache on update
+            InvalidateCacheOnBookingChange::class,
         ],
 
         BookingDeleted::class => [
-            InvalidateCacheOnBookingDeleted::class,  // ← Auto-invalidate cache on delete
+            InvalidateCacheOnBookingChange::class,
         ],
     ];
 
